@@ -1,15 +1,40 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { signInWithGoogle, signInWithApple, signInWithFacebook } from '../auth/sso'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const [signOpen, setSignOpen] = useState(false)
+  const popRef = useRef(null)
 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) setOpen(false)
     }
+    const handleClick = (e) => {
+      if (popRef.current && !popRef.current.contains(e.target)) setSignOpen(false)
+    }
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    window.addEventListener('click', handleClick)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('click', handleClick)
+    }
   }, [])
+
+  const handleProvider = async (provider) => {
+    let res
+    try {
+      if (provider === 'google') res = await signInWithGoogle()
+      if (provider === 'apple') res = await signInWithApple()
+      if (provider === 'facebook') res = await signInWithFacebook()
+    } catch (err) {
+      console.error(err)
+      res = { ok: false, error: err }
+    }
+    // For now just log the stubbed response; replace with real handling.
+    console.log('SSO result', res)
+    setSignOpen(false)
+  }
 
   return (
     <nav className="navbar">
@@ -27,7 +52,16 @@ export default function Navbar() {
         <div className={`nav-links ${open ? 'open' : ''}`}>
           <a href="#" className="nav-link">Home</a>
           <a href="#" className="nav-link">About</a>
-          <a href="#" className="nav-link sign-in">Sign in</a>
+          <div className="nav-link sign-in" ref={popRef}>
+            <button className="sign-toggle" onClick={() => setSignOpen((v) => !v)}>Sign in</button>
+            {signOpen && (
+              <div className="sign-popover">
+                <button className="sign-btn" onClick={() => handleProvider('google')}>Continue with Google</button>
+                <button className="sign-btn" onClick={() => handleProvider('apple')}>Continue with Apple</button>
+                <button className="sign-btn" onClick={() => handleProvider('facebook')}>Continue with Facebook</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>

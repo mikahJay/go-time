@@ -103,3 +103,39 @@ body {
 .app-content {
   padding-top: 1rem;
 }
+
+/* Sign-in popover */
+.sign-toggle {
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+}
+.sign-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: absolute;
+  right: 0;
+  top: 40px;
+  background: #fff;
+  padding: 0.6rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  min-width: 200px;
+  z-index: 40;
+}
+.sign-btn {
+  background: #f8fafc;
+  border: 1px solid #e6e9ee;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+.sign-btn:hover { filter: brightness(0.98); }
+
+@media (max-width: 768px) {
+  .sign-popover { right: 1rem; top: 64px; }
+}

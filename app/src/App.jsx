@@ -6,8 +6,7 @@ export default function App() {
     <div className="app">
       <Navbar />
       <main className="app-content">
-        <h1>Hello, world!</h1>
-        <p>This is a simple React app.</p>
+        <h1>Make use of resources for worthy causes.</h1>
       </main>
     </div>
   )
