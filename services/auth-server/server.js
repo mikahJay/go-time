@@ -146,8 +146,12 @@ app.post('/auth/userinfo', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`Auth server listening on ${PORT}`)
-  console.log(`Server base URL: ${SERVER_BASE}`)
-  console.log(`Client redirect URI: ${CLIENT_REDIRECT}`)
-})
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Auth server listening on ${PORT}`)
+    console.log(`Server base URL: ${SERVER_BASE}`)
+    console.log(`Client redirect URI: ${CLIENT_REDIRECT}`)
+  })
+}
+
+module.exports = app
