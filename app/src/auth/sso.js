@@ -3,12 +3,14 @@
 
 export async function signInWithGoogle() {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  const authServer = import.meta.env.VITE_AUTH_SERVER_BASE || 'http://localhost:3000'
   if (!clientId) {
     console.warn('VITE_GOOGLE_CLIENT_ID not set')
     return { ok: false, error: 'missing_client_id' }
   }
-  // Real implementation would redirect to Google's OAuth endpoint or use their SDK.
-  return Promise.resolve({ ok: true, provider: 'google', token: 'stub-google-token' })
+  // Redirect the browser to the server-side auth start endpoint which begins the OAuth flow.
+  window.location.href = `${authServer.replace(/\/$/, '')}/auth/google`
+  return Promise.resolve({ ok: true, redirected: true })
 }
 
 export async function signInWithApple() {
