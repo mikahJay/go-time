@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { signInWithGoogle, signInWithApple, signInWithFacebook } from '../auth/sso'
 
-export default function Navbar() {
+export default function Navbar({ user, onSignOut }) {
   const [open, setOpen] = useState(false)
   const [signOpen, setSignOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const popRef = useRef(null)
+  const profileRef = useRef(null)
 
   useEffect(() => {
     const handleResize = () => {
@@ -12,6 +14,7 @@ export default function Navbar() {
     }
     const handleClick = (e) => {
       if (popRef.current && !popRef.current.contains(e.target)) setSignOpen(false)
+      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false)
     }
     window.addEventListener('resize', handleResize)
     window.addEventListener('click', handleClick)
@@ -52,16 +55,39 @@ export default function Navbar() {
         <div className={`nav-links ${open ? 'open' : ''}`}>
           <a href="#" className="nav-link">Home</a>
           <a href="#" className="nav-link">About</a>
-          <div className="nav-link sign-in" ref={popRef}>
-            <button className="sign-toggle" onClick={() => setSignOpen((v) => !v)}>Sign in</button>
-            {signOpen && (
-              <div className="sign-popover">
-                <button className="sign-btn" onClick={() => handleProvider('google')}>Continue with Google</button>
-                <button className="sign-btn" onClick={() => handleProvider('apple')}>Continue with Apple</button>
-                <button className="sign-btn" onClick={() => handleProvider('facebook')}>Continue with Facebook</button>
-              </div>
-            )}
-          </div>
+          {user ? (
+            <div className="nav-link user-info" ref={profileRef}>
+              {user.avatar && (
+                <img src={user.avatar} alt={user.name} className="user-avatar" onClick={() => setProfileOpen((v) => !v)} />
+              )}
+              <span className="user-name">{user.name}</span>
+              {profileOpen && (
+                <div className="profile-popover">
+                  <div className="profile-row">
+                    {user.avatar && <img src={user.avatar} alt={user.name} className="profile-avatar-large" />}
+                    <div>
+                      <div className="profile-name">{user.name}</div>
+                      {user.email && <div className="profile-email">{user.email}</div>}
+                    </div>
+                  </div>
+                  <div className="profile-actions">
+                    <button className="sign-out" onClick={() => { setProfileOpen(false); onSignOut && onSignOut() }}>Sign out</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="nav-link sign-in" ref={popRef}>
+              <button className="sign-toggle" onClick={() => setSignOpen((v) => !v)}>Sign in</button>
+              {signOpen && (
+                <div className="sign-popover">
+                  <button className="sign-btn" onClick={() => handleProvider('google')}>Continue with Google</button>
+                  <button className="sign-btn" onClick={() => handleProvider('apple')}>Continue with Apple</button>
+                  <button className="sign-btn" onClick={() => handleProvider('facebook')}>Continue with Facebook</button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </nav>

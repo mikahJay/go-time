@@ -107,6 +107,45 @@ app.get('/auth/:provider/callback', async (req, res) => {
   }
 })
 
+// Exchange token for user info via the provider APIs (server-side)
+app.post('/auth/userinfo', async (req, res) => {
+  try {
+    const { provider, token } = req.body || {}
+    if (!provider || !token) return res.status(400).json({ error: 'missing_provider_or_token' })
+
+    if (provider === 'google') {
+      // Use Google's userinfo endpoint
+      const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await resp.json()
+      // data will contain name, email, sub, picture, etc.
+      return res.json({ provider: 'google', name: data.name || data.email || null, picture: data.picture || null, raw: data })
+    }
+
+    if (provider === 'facebook') {
+      // Facebook Graph API: require access_token as query
+      // Request picture field too when available
+      const params = new URLSearchParams({ access_token: String(token), fields: 'name,email,picture' })
+      const resp = await fetch(`https://graph.facebook.com/v16.0/me?${params.toString()}`)
+      const data = await resp.json()
+      const picture = data?.picture?.data?.url || null
+      return res.json({ provider: 'facebook', name: data.name || null, picture, raw: data })
+    }
+
+    if (provider === 'apple') {
+      // Apple requires server-side validation and retrieval of user data at time of auth.
+      // For now return a stub response.
+      return res.json({ provider: 'apple', name: 'Apple User', raw: {} })
+    }
+
+    return res.status(400).json({ error: 'unsupported_provider' })
+  } catch (err) {
+    console.error('userinfo error', err)
+    return res.status(500).json({ error: 'server_error', details: String(err) })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Auth server listening on ${PORT}`)
   console.log(`Server base URL: ${SERVER_BASE}`)
