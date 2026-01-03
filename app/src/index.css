@@ -139,3 +139,46 @@ body {
 @media (max-width: 768px) {
   .sign-popover { right: 1rem; top: 64px; }
 }
+
+.user-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.user-name {
+  font-weight: 600;
+}
+.sign-out {
+  background: transparent;
+  border: 1px solid #e6e9ee;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.sign-out:hover { filter: brightness(0.97); }
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.4rem;
+}
+
+/* Profile popover */
+.profile-popover {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  background: #fff;
+  padding: 0.6rem;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.12);
+  min-width: 220px;
+  z-index: 50;
+}
+.profile-row { display: flex; gap: 0.6rem; align-items: center; }
+.profile-avatar-large { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.profile-name { font-weight: 700; }
+.profile-email { font-size: 0.9rem; color: #475569; }
+.profile-actions { margin-top: 0.5rem; display:flex; justify-content:flex-end; }
