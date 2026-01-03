@@ -1,13 +1,25 @@
-# Hello React App
+# Go-Time
 
-Minimal React app scaffolded with Vite.
+Web application for the Go-Time platform. Built in React.
 
 Run locally:
 
 ```powershell
-cd hello-react-app
 npm install
 npm run dev
 ```
 
 Open the URL printed by `vite` (usually http://localhost:5173).
+
+Build:
+
+```powershell
+npm install
+npm run build
+```
+
+Run production version:
+
+```powershell
+npm start
+```
