@@ -20,7 +20,7 @@ npm start
 
 ## Tests
 
-```powershell
+```
 cd services/resource-server
 npm install
 npm test
