@@ -10,12 +10,29 @@
 //   createdAt: string,
 //   updatedAt: string
 // }
+//
+// ID generation note:
+// - This module uses `crypto.randomUUID()` to generate RFC-4122 v4 UUIDs for
+//   resource `id` values. UUID v4 provides ~122 bits of randomness and is
+//   generated from Node's CSPRNG; collisions are astronomically unlikely for
+//   practical systems but not mathematically impossible.
+// - `crypto.randomUUID()` is safe for concurrent use (the underlying RNG is
+//   thread-safe). This avoids the race conditions that a shared counter can
+//   introduce in multi-threaded or clustered environments.
+// - If your application requires an absolute, provable uniqueness guarantee
+//   (e.g., to rely on strict DB constraints or cross-system coordination), you
+//   should still enforce uniqueness at the persistence layer (unique index in
+//   a database) or use a coordinated ID allocator (e.g., Snowflake/ULID with
+//   node identifiers) in addition to UUIDs.
+// - For most use cases, UUID v4 from `crypto.randomUUID()` is appropriate and
+//   preferred over simple counters because it avoids coordination and is
+//   globally unique for all practical purposes.
 
+const { randomUUID } = require('crypto')
 const store = new Map()
-let counter = 1
 
 function genId() {
-  return `res_${Date.now()}_${counter++}`
+  return `res_${randomUUID()}`
 }
 
 function nowIso() {
@@ -66,7 +83,6 @@ function deleteResource(id) {
 
 function clearStore() {
   store.clear()
-  counter = 1
 }
 
 module.exports = {
