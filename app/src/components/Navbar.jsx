@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { signInWithGoogle, signInWithApple, signInWithFacebook } from '../auth/sso'
 
-export default function Navbar({ user, onSignOut }) {
+export default function Navbar({ user, onSignOut, activeTab, onNavigate }) {
   const [open, setOpen] = useState(false)
   const [signOpen, setSignOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -53,8 +53,23 @@ export default function Navbar({ user, onSignOut }) {
         </button>
 
         <div className={`nav-links ${open ? 'open' : ''}`}>
-          <a href="#" className="nav-link">Home</a>
-          <a href="#" className="nav-link">About</a>
+          <a
+            href="#"
+            className={`nav-link ${activeTab === 'home' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); onNavigate && onNavigate('home') }}
+          >Home</a>
+          <a
+            href="#"
+            className={`nav-link ${activeTab === 'about' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); onNavigate && onNavigate('about') }}
+          >About</a>
+          {user && (
+            <a
+              href="#"
+              className={`nav-link ${activeTab === 'resources' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); onNavigate && onNavigate('resources') }}
+            >My Resources</a>
+          )}
           {user ? (
             <div className="nav-link user-info" ref={profileRef}>
               {user.avatar && (

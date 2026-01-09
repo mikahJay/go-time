@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from './components/Navbar'
+import MyResources from './components/MyResources'
 
 function safeAtob(str) {
   if (typeof atob === 'function') return atob(str)
@@ -28,8 +29,8 @@ function parseJwtPayload(token) {
 
 export default function App() {
   const [user, setUser] = useState(null)
-  const [resources, setResources] = useState([])
-  const [resourcesErr, setResourcesErr] = useState(null)
+  
+  const [activeTab, setActiveTab] = useState('home')
 
   // load persisted user on start
   useEffect(() => {
@@ -107,30 +108,7 @@ export default function App() {
     }
   }, [])
 
-  // Load resources for the authenticated user only
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      if (!user) return
-      try {
-        const id = user.email || user.name
-        const base = import.meta.env.VITE_RESOURCE_SERVER_BASE || ''
-        const url = base ? `${base.replace(/\/$/, '')}/resources?owner=${encodeURIComponent(id)}` : `/api/resources?owner=${encodeURIComponent(id)}`
-        const resp = await fetch(url)
-        if (!mounted) return
-        if (!resp.ok) {
-          setResourcesErr(`status:${resp.status}`)
-          return
-        }
-        const data = await resp.json()
-        setResources(Array.isArray(data) ? data : [])
-      } catch (err) {
-        if (!mounted) return
-        setResourcesErr(err.message || String(err))
-      }
-    })()
-    return () => { mounted = false }
-  }, [user])
+  
 
   const handleSignOut = () => {
     setUser(null)
@@ -139,28 +117,25 @@ export default function App() {
 
   return (
     <div className="app">
-      <Navbar user={user} onSignOut={handleSignOut} />
+      <Navbar user={user} onSignOut={handleSignOut} activeTab={activeTab} onNavigate={(t) => setActiveTab(t)} />
       <main className="app-content">
-        {user ? (
+        {activeTab === 'resources' ? (
+          <MyResources user={user} />
+        ) : activeTab === 'about' ? (
           <>
-            <h1>Hello {user.name}</h1>
-            {resources.length > 0 ? (
-              <section>
-                <h2>Your Resources</h2>
-                <ul>
-                  {resources.map((r) => (
-                    <li key={r.id}>{r.name || r.id} — {r.quantity ?? 0}</li>
-                  ))}
-                </ul>
-              </section>
-            ) : resourcesErr ? (
-              <div>Unable to load resources: {resourcesErr}</div>
-            ) : (
-              <div>Sign in to peruse your resources.</div>
-            )}
+            <h1>About GoTime</h1>
+            <p>Make use of resources for worthy causes.</p>
           </>
         ) : (
-          <h1>Make use of resources for worthy causes.</h1>
+          // home
+          user ? (
+            <>
+              <h1>Hello {user.name}</h1>
+              <div>Use the My Resources tab to view your resources.</div>
+            </>
+          ) : (
+            <h1>Make use of resources for worthy causes.</h1>
+          )
         )}
       </main>
     </div>
