@@ -20,6 +20,11 @@ async function create(req, res) {
   if (payload.description !== undefined && typeof payload.description !== 'string') {
     return res.status(400).json({ error: 'invalid_description' })
   }
+  if (payload.tags !== undefined) {
+    if (!Array.isArray(payload.tags) || payload.tags.some(t => typeof t !== 'string' || !t.trim() || t.length > 32)) {
+      return res.status(400).json({ error: 'invalid_tags' })
+    }
+  }
   try {
     const created = await store.createResource(payload)
     res.status(201).json(created)
@@ -34,6 +39,11 @@ async function update(req, res) {
   const patch = req.body || {}
   if (patch.description !== undefined && typeof patch.description !== 'string') {
     return res.status(400).json({ error: 'invalid_description' })
+  }
+  if (patch.tags !== undefined) {
+    if (!Array.isArray(patch.tags) || patch.tags.some(t => typeof t !== 'string' || !t.trim() || t.length > 32)) {
+      return res.status(400).json({ error: 'invalid_tags' })
+    }
   }
   const updated = await store.updateResource(id, patch)
   if (!updated) return res.status(404).json({ error: 'not_found' })

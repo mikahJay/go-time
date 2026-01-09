@@ -21,6 +21,9 @@ async function createResource(payload = {}) {
     id,
     quantity: Number(payload.quantity) || 0,
     description: payload.description || null,
+    // tags stored as list; `tag` is a scalar primary tag for indexing
+    tags: Array.isArray(payload.tags) ? payload.tags : [],
+    tag: Array.isArray(payload.tags) && payload.tags.length > 0 ? String(payload.tags[0]) : (payload.tag || null),
     metadata: payload.metadata || {},
     owner: payload.owner || null,
     createdAt: payload.createdAt || nowIso(),
@@ -87,6 +90,8 @@ async function updateResource(id, patch = {}) {
   if (patch.metadata !== undefined) updated.metadata = patch.metadata
   if (patch.owner !== undefined) updated.owner = patch.owner
   if (patch.description !== undefined) updated.description = patch.description
+  if (patch.tags !== undefined) updated.tags = Array.isArray(patch.tags) ? patch.tags : []
+  if (patch.tags !== undefined) updated.tag = Array.isArray(patch.tags) && patch.tags.length > 0 ? String(patch.tags[0]) : (patch.tag || null)
   updated.updatedAt = nowIso()
 
   const params = {

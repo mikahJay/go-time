@@ -20,6 +20,8 @@ export class ResourcesStack extends cdk.Stack {
     table.addGlobalSecondaryIndex({
       indexName: 'OwnerIndex',
       partitionKey: { name: 'owner', type: dynamodb.AttributeType.STRING },
+      // Add a sort key `tag` so queries can efficiently filter by owner + tag.
+      sortKey: { name: 'tag', type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     })
 
