@@ -28,6 +28,8 @@ function parseJwtPayload(token) {
 
 export default function App() {
   const [user, setUser] = useState(null)
+  const [resources, setResources] = useState([])
+  const [resourcesErr, setResourcesErr] = useState(null)
 
   // load persisted user on start
   useEffect(() => {
@@ -105,6 +107,29 @@ export default function App() {
     }
   }, [])
 
+  // Load resources (public) so the UI can show available resources
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const base = import.meta.env.VITE_RESOURCE_SERVER_BASE || ''
+        const url = base ? `${base.replace(/\/$/, '')}/resources` : '/api/resources'
+        const resp = await fetch(url)
+        if (!mounted) return
+        if (!resp.ok) {
+          setResourcesErr(`status:${resp.status}`)
+          return
+        }
+        const data = await resp.json()
+        setResources(Array.isArray(data) ? data : [])
+      } catch (err) {
+        if (!mounted) return
+        setResourcesErr(err.message || String(err))
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
+
   const handleSignOut = () => {
     setUser(null)
     try { localStorage.removeItem('goTimeUser') } catch (e) {}
@@ -115,7 +140,23 @@ export default function App() {
       <Navbar user={user} onSignOut={handleSignOut} />
       <main className="app-content">
         {user ? (
-          <h1>Hello {user.name}</h1>
+          <>
+            <h1>Hello {user.name}</h1>
+            {resources.length > 0 ? (
+              <section>
+                <h2>Resources</h2>
+                <ul>
+                  {resources.map((r) => (
+                    <li key={r.id}>{r.name || r.id} — {r.quantity ?? 0}</li>
+                  ))}
+                </ul>
+              </section>
+            ) : resourcesErr ? (
+              <div>Unable to load resources: {resourcesErr}</div>
+            ) : (
+              <div>No resources found.</div>
+            )}
+          </>
         ) : (
           <h1>Make use of resources for worthy causes.</h1>
         )}
