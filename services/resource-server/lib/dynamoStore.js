@@ -50,9 +50,15 @@ async function getResource(id) {
   return res.Item || null
 }
 
-async function listResources() {
-  // Note: Scan is okay for small datasets / dev. For prod, use queries with indexes.
+async function listResources(owner) {
+  // Note: Scan is okay for small datasets / dev. For prod, add proper indexes and use Query.
   const params = { TableName: TABLE }
+  if (owner !== undefined && owner !== null) {
+    // 'owner' is a reserved word in DynamoDB; use ExpressionAttributeNames
+    params.FilterExpression = '#owner = :o'
+    params.ExpressionAttributeNames = { '#owner': 'owner' }
+    params.ExpressionAttributeValues = { ':o': owner }
+  }
   const res = await ddb.send(new ScanCommand(params))
   return res.Items || []
 }

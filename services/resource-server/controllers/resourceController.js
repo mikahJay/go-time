@@ -1,7 +1,9 @@
 const store = require('../lib/resourceStore')
 
 async function list(req, res) {
-  const items = await store.listResources()
+  // Support optional owner filtering: `GET /resources?owner=<ownerId>`
+  const owner = req.query.owner || null
+  const items = await store.listResources(owner)
   res.json(items)
 }
 

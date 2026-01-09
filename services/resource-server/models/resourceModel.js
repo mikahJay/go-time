@@ -59,8 +59,10 @@ function getResource(id) {
   return store.get(id) || null
 }
 
-function listResources() {
-  return Array.from(store.values())
+function listResources(owner) {
+  const all = Array.from(store.values())
+  if (owner === undefined || owner === null) return all
+  return all.filter((r) => r.owner === owner)
 }
 
 function updateResource(id, patch = {}) {

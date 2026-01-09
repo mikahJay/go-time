@@ -107,13 +107,15 @@ export default function App() {
     }
   }, [])
 
-  // Load resources (public) so the UI can show available resources
+  // Load resources for the authenticated user only
   useEffect(() => {
     let mounted = true
     ;(async () => {
+      if (!user) return
       try {
+        const id = user.email || user.name
         const base = import.meta.env.VITE_RESOURCE_SERVER_BASE || ''
-        const url = base ? `${base.replace(/\/$/, '')}/resources` : '/api/resources'
+        const url = base ? `${base.replace(/\/$/, '')}/resources?owner=${encodeURIComponent(id)}` : `/api/resources?owner=${encodeURIComponent(id)}`
         const resp = await fetch(url)
         if (!mounted) return
         if (!resp.ok) {
@@ -128,7 +130,7 @@ export default function App() {
       }
     })()
     return () => { mounted = false }
-  }, [])
+  }, [user])
 
   const handleSignOut = () => {
     setUser(null)
@@ -144,7 +146,7 @@ export default function App() {
             <h1>Hello {user.name}</h1>
             {resources.length > 0 ? (
               <section>
-                <h2>Resources</h2>
+                <h2>Your Resources</h2>
                 <ul>
                   {resources.map((r) => (
                     <li key={r.id}>{r.name || r.id} — {r.quantity ?? 0}</li>
@@ -154,7 +156,7 @@ export default function App() {
             ) : resourcesErr ? (
               <div>Unable to load resources: {resourcesErr}</div>
             ) : (
-              <div>No resources found.</div>
+              <div>Sign in to peruse your resources.</div>
             )}
           </>
         ) : (
