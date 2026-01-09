@@ -1,0 +1,14 @@
+{
+  "name": "go-time-root",
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "cross-env": "^7.0.3"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"cross-env PORT=3000 node services/auth-server/server.js\" \"cross-env PORT=4000 node services/resource-server/server.js\" \"cross-env VITE_PORT=5173 npm --prefix app run dev -- --port 5173\"",
+    "dev:auth": "cross-env PORT=3000 node services/auth-server/server.js",
+    "dev:resource": "cross-env PORT=4000 node services/resource-server/server.js",
+    "dev:app": "cross-env VITE_PORT=5173 npm --prefix app run dev -- --port 5173"
+  }
+}

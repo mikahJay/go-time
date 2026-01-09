@@ -5,7 +5,7 @@ Scaffold for a simple Resource microservice.
 ## Endpoints
 
 - GET /resources — list resources
-- POST /resources — create resource (body: { name, type, quantity, metadata, owner })
+- POST /resources — create resource (body: { name, type, quantity, description?, metadata, owner })
 - GET /resources/:id — get resource
 - PUT /resources/:id — update resource
 - DELETE /resources/:id — delete resource
@@ -43,6 +43,10 @@ npm test
 Set `RESOURCE_STORE=dynamo` and configure `AWS_REGION` and `DYNAMO_TABLE` (see `.env.example`). The server will use DynamoDB as the backing store and expose the same `/resources` API.
 
 Note: the DynamoDB adapter uses `Scan` for list operations (suitable for small datasets / dev). For production usage, add proper indexes and queries.
+
+Fields
+
+- `description` (optional string): free-text description for the resource. It's optional and may be included on create or update. The server validates that `description` is a string when present.
 
 ### AWS profile & config (recommended)
 

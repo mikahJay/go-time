@@ -1,6 +1,8 @@
 import request from 'supertest'
 import { describe, it, expect, beforeEach } from 'vitest'
 
+// Force in-memory store for tests to avoid hitting real DynamoDB
+process.env.RESOURCE_STORE = 'memory'
 const { default: app } = await import('../server')
 const model = await import('../models/resourceModel')
 
