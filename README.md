@@ -69,3 +69,14 @@ Notes
 - `resource-server` defaults to port 4000.
 - The React app uses Vite and serves on 5173 by default; you can set a different port using the `--port` flag when running `npm run dev`.
 - To point the front-end at a running `resource-server`, set `VITE_RESOURCE_SERVER_BASE` in `web-app/.env` or in your shell: `export VITE_RESOURCE_SERVER_BASE=http://localhost:4000` (or PowerShell equivalent).
+
+## AWS profile guidance
+
+When deploying the CDK stacks you may want to use a specific AWS profile. Configure your credentials via `~/.aws/credentials` and `~/.aws/config`, then set the profile and enable loading the config in PowerShell:
+
+```powershell
+$env:AWS_PROFILE = 'dev'
+$env:AWS_SDK_LOAD_CONFIG = '1'
+```
+
+After that run `npx cdk deploy ResourcesStack` (you may need to run `npx cdk bootstrap` once).
