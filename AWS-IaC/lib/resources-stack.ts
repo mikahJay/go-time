@@ -7,10 +7,10 @@ export class ResourcesStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props)
 
-    // DynamoDB table 'Resources' with partition key 'Space'
+    // DynamoDB table 'Resources' with partition key 'id' (matches server code)
     const table = new dynamodb.Table(this, 'ResourcesTable', {
       tableName: 'Resources',
-      partitionKey: { name: 'Space', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // safe for dev; change for prod
     })

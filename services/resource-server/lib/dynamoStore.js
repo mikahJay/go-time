@@ -4,7 +4,11 @@ const { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, DeleteComma
 const REGION = process.env.AWS_REGION || 'us-east-1'
 const TABLE = process.env.DYNAMO_TABLE || process.env.RESOURCE_TABLE || 'Resources'
 
-const client = new DynamoDBClient({ region: REGION })
+// Allow overriding the endpoint (useful for LocalStack) via DYNAMO_ENDPOINT.
+const clientConfig = { region: REGION }
+if (process.env.DYNAMO_ENDPOINT) clientConfig.endpoint = process.env.DYNAMO_ENDPOINT
+
+const client = new DynamoDBClient(clientConfig)
 const ddb = DynamoDBDocumentClient.from(client)
 
 function nowIso() {
