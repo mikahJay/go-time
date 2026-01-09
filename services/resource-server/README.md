@@ -18,6 +18,18 @@ npm install
 npm start
 ```
 
+### Sample curl POST
+
+```
+curl -X POST -H "Content-Type: application/json" -d '{"name": "hello"}' http://localhost:4000/resources
+```
+
+### Sample curl GET
+
+```
+curl http://localhost:4000/resources/res_8fffc157-8eaa-4fba-a636-0f0ac337d3f8
+```
+
 ## Tests
 
 ```
