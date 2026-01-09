@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from './components/Navbar'
+import MyResources from './components/MyResources'
 
 function safeAtob(str) {
   if (typeof atob === 'function') return atob(str)
@@ -28,6 +29,8 @@ function parseJwtPayload(token) {
 
 export default function App() {
   const [user, setUser] = useState(null)
+  
+  const [activeTab, setActiveTab] = useState('home')
 
   // load persisted user on start
   useEffect(() => {
@@ -105,6 +108,8 @@ export default function App() {
     }
   }, [])
 
+  
+
   const handleSignOut = () => {
     setUser(null)
     try { localStorage.removeItem('goTimeUser') } catch (e) {}
@@ -112,12 +117,25 @@ export default function App() {
 
   return (
     <div className="app">
-      <Navbar user={user} onSignOut={handleSignOut} />
+      <Navbar user={user} onSignOut={handleSignOut} activeTab={activeTab} onNavigate={(t) => setActiveTab(t)} />
       <main className="app-content">
-        {user ? (
-          <h1>Hello {user.name}</h1>
+        {activeTab === 'resources' ? (
+          <MyResources user={user} />
+        ) : activeTab === 'about' ? (
+          <>
+            <h1>About GoTime</h1>
+            <p>Make use of resources for worthy causes.</p>
+          </>
         ) : (
-          <h1>Make use of resources for worthy causes.</h1>
+          // home
+          user ? (
+            <>
+              <h1>Hello {user.name}</h1>
+              <div>Use the My Resources tab to view your resources.</div>
+            </>
+          ) : (
+            <h1>Make use of resources for worthy causes.</h1>
+          )
         )}
       </main>
     </div>

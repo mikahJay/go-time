@@ -5,6 +5,7 @@
 //   name: string,
 //   type: string,
 //   quantity: number,
+//   description?: string,   // optional free-text description
 //   metadata: object,
 //   owner: string | null,
 //   createdAt: string,
@@ -39,13 +40,14 @@ function nowIso() {
   return new Date().toISOString()
 }
 
-function createResource({ name, type = 'generic', quantity = 1, metadata = {}, owner = null } = {}) {
+function createResource({ name, type = 'generic', quantity = 1, description = null, metadata = {}, owner = null } = {}) {
   const id = genId()
   const resource = {
     id,
     name: name || `resource-${id}`,
     type,
     quantity: Number(quantity) || 0,
+    description: description || null,
     metadata: metadata || {},
     owner: owner || null,
     createdAt: nowIso(),
@@ -59,8 +61,10 @@ function getResource(id) {
   return store.get(id) || null
 }
 
-function listResources() {
-  return Array.from(store.values())
+function listResources(owner) {
+  const all = Array.from(store.values())
+  if (owner === undefined || owner === null) return all
+  return all.filter((r) => r.owner === owner)
 }
 
 function updateResource(id, patch = {}) {
@@ -70,6 +74,7 @@ function updateResource(id, patch = {}) {
   if (patch.name !== undefined) updated.name = patch.name
   if (patch.type !== undefined) updated.type = patch.type
   if (patch.quantity !== undefined) updated.quantity = Number(patch.quantity)
+  if (patch.description !== undefined) updated.description = patch.description
   if (patch.metadata !== undefined) updated.metadata = patch.metadata
   if (patch.owner !== undefined) updated.owner = patch.owner
   updated.updatedAt = nowIso()

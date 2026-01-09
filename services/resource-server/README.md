@@ -5,7 +5,7 @@ Scaffold for a simple Resource microservice.
 ## Endpoints
 
 - GET /resources — list resources
-- POST /resources — create resource (body: { name, type, quantity, metadata, owner })
+- POST /resources — create resource (body: { name, type, quantity, description?, metadata, owner })
 - GET /resources/:id — get resource
 - PUT /resources/:id — update resource
 - DELETE /resources/:id — delete resource
@@ -44,32 +44,34 @@ Set `RESOURCE_STORE=dynamo` and configure `AWS_REGION` and `DYNAMO_TABLE` (see `
 
 Note: the DynamoDB adapter uses `Scan` for list operations (suitable for small datasets / dev). For production usage, add proper indexes and queries.
 
+Fields
+
+- `description` (optional string): free-text description for the resource. It's optional and may be included on create or update. The server validates that `description` is a string when present.
+
 ### AWS profile & config (recommended)
 
 The AWS SDK resolves credentials and region using the standard provider chain, so for local development it's recommended to configure your profile in `~/.aws/credentials` and `~/.aws/config` rather than committing secrets.
 
-### Examples:
+Create a profile with the AWS CLI:
 
-- Create a profile with the AWS CLI:
+```bash
+aws configure --profile dev
+```
 
-	```bash
-	aws configure --profile dev
-	```
+Use the profile for a session (PowerShell):
 
-- Use the profile for a session (PowerShell):
+```powershell
+$env:AWS_PROFILE = 'dev'
+# optionally enable loading shared config for region from ~/.aws/config
+$env:AWS_SDK_LOAD_CONFIG = '1'
+```
 
-	```powershell
-	$env:AWS_PROFILE = 'dev'
-	# optionally enable loading shared config for region from ~/.aws/config
-	$env:AWS_SDK_LOAD_CONFIG = '1'
-	```
+Use the profile in bash:
 
-- Use the profile in bash:
-
-	```bash
-	export AWS_PROFILE=dev
-	export AWS_SDK_LOAD_CONFIG=1
-	```
+```bash
+export AWS_PROFILE=dev
+export AWS_SDK_LOAD_CONFIG=1
+```
 
 You can still set `AWS_REGION` and `DYNAMO_TABLE` in `services/resource-server/.env` for convenience.
 
@@ -84,4 +86,4 @@ setx DYNAMO_TABLE Resources
 setx DYNAMO_ENDPOINT http://localhost:4566
 ```
 
-Note: the current DynamoDB adapter will use the AWS SDK default client construction. If you want me to wire `DYNAMO_ENDPOINT` into the adapter so it automatically points the `DynamoDBClient` at `DYNAMO_ENDPOINT` for LocalStack, I can add that change.
+The DynamoDB adapter now supports `DYNAMO_ENDPOINT`, so the client will point at LocalStack when that variable is set.

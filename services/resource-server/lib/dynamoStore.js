@@ -1,10 +1,14 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb')
-const { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb')
+const { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, DeleteCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb')
 
 const REGION = process.env.AWS_REGION || 'us-east-1'
 const TABLE = process.env.DYNAMO_TABLE || process.env.RESOURCE_TABLE || 'Resources'
 
-const client = new DynamoDBClient({ region: REGION })
+// Allow overriding the endpoint (useful for LocalStack) via DYNAMO_ENDPOINT.
+const clientConfig = { region: REGION }
+if (process.env.DYNAMO_ENDPOINT) clientConfig.endpoint = process.env.DYNAMO_ENDPOINT
+
+const client = new DynamoDBClient(clientConfig)
 const ddb = DynamoDBDocumentClient.from(client)
 
 function nowIso() {
@@ -16,6 +20,7 @@ async function createResource(payload = {}) {
   const resource = Object.assign({}, payload, {
     id,
     quantity: Number(payload.quantity) || 0,
+    description: payload.description || null,
     metadata: payload.metadata || {},
     owner: payload.owner || null,
     createdAt: payload.createdAt || nowIso(),
@@ -46,9 +51,28 @@ async function getResource(id) {
   return res.Item || null
 }
 
-async function listResources() {
-  // Note: Scan is okay for small datasets / dev. For prod, use queries with indexes.
+async function listResources(owner) {
+  // Note: Scan is okay for small datasets / dev. For prod, add proper indexes and use Query.
   const params = { TableName: TABLE }
+  if (owner !== undefined && owner !== null) {
+    // If OwnerIndex exists, prefer Query for efficiency. Fallback to Scan with filter
+    try {
+      const qparams = {
+        TableName: TABLE,
+        IndexName: 'OwnerIndex',
+        KeyConditionExpression: '#owner = :o',
+        ExpressionAttributeNames: { '#owner': 'owner' },
+        ExpressionAttributeValues: { ':o': owner }
+      }
+      const qres = await ddb.send(new QueryCommand(qparams))
+      return qres.Items || []
+    } catch (err) {
+      // fallback to scan
+      params.FilterExpression = '#owner = :o'
+      params.ExpressionAttributeNames = { '#owner': 'owner' }
+      params.ExpressionAttributeValues = { ':o': owner }
+    }
+  }
   const res = await ddb.send(new ScanCommand(params))
   return res.Items || []
 }
@@ -62,6 +86,7 @@ async function updateResource(id, patch = {}) {
   if (patch.quantity !== undefined) updated.quantity = Number(patch.quantity)
   if (patch.metadata !== undefined) updated.metadata = patch.metadata
   if (patch.owner !== undefined) updated.owner = patch.owner
+  if (patch.description !== undefined) updated.description = patch.description
   updated.updatedAt = nowIso()
 
   const params = {
