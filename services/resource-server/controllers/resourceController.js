@@ -1,9 +1,10 @@
 const store = require('../lib/resourceStore')
 
 async function list(req, res) {
-  // Support optional owner filtering: `GET /resources?owner=<ownerId>`
+  // Support optional owner and tag filtering: `GET /resources?owner=<ownerId>&tag=<tag>`
   const owner = req.query.owner || null
-  const items = await store.listResources(owner)
+  const tag = req.query.tag || null
+  const items = await store.listResources(owner, tag)
   res.json(items)
 }
 

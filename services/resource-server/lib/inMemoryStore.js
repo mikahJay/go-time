@@ -9,9 +9,10 @@ module.exports = {
     return model.getResource(id)
   },
   async listResources() {
-    // accept optional owner filter
+    // accept optional owner and tag filters
     const owner = arguments.length > 0 ? arguments[0] : undefined
-    return model.listResources(owner)
+    const tag = arguments.length > 1 ? arguments[1] : undefined
+    return model.listResources(owner, tag)
   },
   async updateResource(id, patch) {
     return model.updateResource(id, patch)

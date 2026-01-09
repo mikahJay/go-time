@@ -54,11 +54,11 @@ async function getResource(id) {
   return res.Item || null
 }
 
-async function listResources(owner) {
-  // Note: Scan is okay for small datasets / dev. For prod, add proper indexes and use Query.
+async function listResources(owner, tag) {
+  // Note: prefer Query against OwnerIndex when owner is provided.
   const params = { TableName: TABLE }
   if (owner !== undefined && owner !== null) {
-    // If OwnerIndex exists, prefer Query for efficiency. Fallback to Scan with filter
+    // If OwnerIndex exists, prefer Query for efficiency. Support optional tag as sort-key.
     try {
       const qparams = {
         TableName: TABLE,
@@ -67,14 +67,36 @@ async function listResources(owner) {
         ExpressionAttributeNames: { '#owner': 'owner' },
         ExpressionAttributeValues: { ':o': owner }
       }
+      if (tag !== undefined && tag !== null) {
+        qparams.KeyConditionExpression = '#owner = :o AND #tag = :t'
+        qparams.ExpressionAttributeNames['#tag'] = 'tag'
+        qparams.ExpressionAttributeValues[':t'] = tag
+      }
       const qres = await ddb.send(new QueryCommand(qparams))
       return qres.Items || []
     } catch (err) {
-      // fallback to scan
-      params.FilterExpression = '#owner = :o'
-      params.ExpressionAttributeNames = { '#owner': 'owner' }
-      params.ExpressionAttributeValues = { ':o': owner }
+      // fallback to scan with filters
+      const filters = []
+      const names = { '#owner': 'owner' }
+      const values = { ':o': owner }
+      filters.push('#owner = :o')
+      if (tag !== undefined && tag !== null) {
+        // try to match scalar `tag` attribute or items that contain tag in `tags` list
+        names['#tag'] = 'tag'
+        values[':t'] = tag
+        // prefer scalar equality then fallback to contains on tags
+        filters.push('#tag = :t OR contains(#tags, :t)')
+        names['#tags'] = 'tags'
+      }
+      params.FilterExpression = filters.join(' AND ')
+      params.ExpressionAttributeNames = names
+      params.ExpressionAttributeValues = values
     }
+  } else if (tag !== undefined && tag !== null) {
+    // No owner provided but tag filter present — use Scan with contains
+    params.FilterExpression = 'contains(#tags, :t) OR #tag = :t'
+    params.ExpressionAttributeNames = { '#tags': 'tags', '#tag': 'tag' }
+    params.ExpressionAttributeValues = { ':t': tag }
   }
   const res = await ddb.send(new ScanCommand(params))
   return res.Items || []

@@ -64,10 +64,21 @@ function getResource(id) {
   return store.get(id) || null
 }
 
-function listResources(owner) {
-  const all = Array.from(store.values())
-  if (owner === undefined || owner === null) return all
-  return all.filter((r) => r.owner === owner)
+function listResources(owner, tag) {
+  let results = Array.from(store.values())
+  if (owner !== undefined && owner !== null) results = results.filter((r) => r.owner === owner)
+  if (tag !== undefined && tag !== null) {
+    const t = String(tag).toLowerCase()
+    results = results.filter((r) => {
+      // check scalar `tag` or any entry in `tags` array (case-insensitive)
+      if (r.tag && String(r.tag).toLowerCase() === t) return true
+      if (Array.isArray(r.tags)) {
+        return r.tags.some(x => String(x).toLowerCase() === t)
+      }
+      return false
+    })
+  }
+  return results
 }
 
 function updateResource(id, patch = {}) {
