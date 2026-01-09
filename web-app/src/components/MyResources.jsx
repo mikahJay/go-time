@@ -9,6 +9,7 @@ export default function MyResources({ user }) {
   const [newName, setNewName] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newQty, setNewQty] = useState(1)
+  const [newTagsInput, setNewTagsInput] = useState('')
   const [addingErr, setAddingErr] = useState(null)
   const [search, setSearch] = useState('')
 
@@ -75,6 +76,9 @@ export default function MyResources({ user }) {
               const base = import.meta.env.VITE_RESOURCE_SERVER_BASE || ''
               const url = base ? `${base.replace(/\/$/, '')}/resources` : `/api/resources`
               const payload = { name: newName, description: newDesc, quantity: Number(newQty), owner: user.email || user.name }
+              if (newTagsInput && newTagsInput.trim()) {
+                payload.tags = newTagsInput.split(',').map((t) => t.trim()).filter(Boolean)
+              }
               const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
               if (!resp.ok) {
                 const body = await resp.text()
@@ -86,6 +90,7 @@ export default function MyResources({ user }) {
               setNewName('')
               setNewDesc('')
               setNewQty(1)
+              setNewTagsInput('')
             } catch (err) {
               setAddingErr(err.message || String(err))
             }
@@ -98,6 +103,9 @@ export default function MyResources({ user }) {
             </div>
             <div>
               <input type="number" placeholder="Quantity (default 1)" value={newQty} onChange={(e) => setNewQty(e.target.value)} min="1" />
+            </div>
+            <div>
+              <input placeholder="Tags (comma-separated)" value={newTagsInput} onChange={(e) => setNewTagsInput(e.target.value)} />
             </div>
             <div>
               <button type="submit">Create</button>
@@ -115,6 +123,9 @@ export default function MyResources({ user }) {
                 <li key={r.id}>
                   <div><strong>{r.name || r.id}</strong> — {r.quantity ?? 0}</div>
                   <div>{r.description || <em>No description</em>}</div>
+                  {r.tags && r.tags.length > 0 && (
+                    <div>Tags: {r.tags.join(', ')}</div>
+                  )}
                   {editingId === r.id ? (
                     <div>
                       <textarea value={editingDesc} onChange={(e) => setEditingDesc(e.target.value)} rows={3} cols={40} />
