@@ -1,10 +1,21 @@
 const store = require('../lib/resourceStore')
 
 async function list(req, res) {
-  // Support optional owner and tag filtering: `GET /resources?owner=<ownerId>&tag=<tag>`
+  // Support optional owner, tag, and query filtering: `GET /resources?owner=<ownerId>&tag=<tag>&q=<query>`
   const owner = req.query.owner || null
   const tag = req.query.tag || null
-  const items = await store.listResources(owner, tag)
+  const q = req.query.q || req.query.query || null
+  // If ElasticSearch is configured and requested for search, use it for full-text queries
+  try {
+    if (q && (process.env.RESOURCE_SEARCH || '').toLowerCase() === 'elastic') {
+      const es = require('../lib/elasticSearch')
+      const items = await es.searchResources(q, owner)
+      return res.json(items)
+    }
+  } catch (e) {
+    // fallthrough to store-based search
+  }
+  const items = await store.listResources(owner, tag, q)
   res.json(items)
 }
 

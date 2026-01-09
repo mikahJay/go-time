@@ -10,6 +10,7 @@ if (process.env.DYNAMO_ENDPOINT) clientConfig.endpoint = process.env.DYNAMO_ENDP
 
 const client = new DynamoDBClient(clientConfig)
 const ddb = DynamoDBDocumentClient.from(client)
+const es = require('./elasticSearch')
 
 function nowIso() {
   return new Date().toISOString()
@@ -39,6 +40,8 @@ async function createResource(payload = {}) {
 
   try {
     await ddb.send(new PutCommand(params))
+    // Try to index in Elastic if configured (best-effort)
+    try { await es.indexResource(resource) } catch (e) {}
     return resource
   } catch (err) {
     // If conditional check fails, indicate duplicate
@@ -55,9 +58,10 @@ async function getResource(id) {
   return res.Item || null
 }
 
-async function listResources(owner, tag) {
+async function listResources(owner, tag, q) {
   // Note: prefer Query against OwnerIndex when owner is provided.
   const params = { TableName: TABLE }
+  const ql = q !== undefined && q !== null ? String(q).toLowerCase().trim() : null
   if (owner !== undefined && owner !== null) {
     // If OwnerIndex exists, prefer Query for efficiency. Support optional tag as sort-key.
     try {
@@ -76,7 +80,12 @@ async function listResources(owner, tag) {
         qparams.ExpressionAttributeValues[':t'] = tag
       }
       const qres = await ddb.send(new QueryCommand(qparams))
-      return qres.Items || []
+      // If a free-text query was provided, filter results in JS
+      let items = qres.Items || []
+      if (ql) {
+        items = items.filter((it) => JSON.stringify(it).toLowerCase().includes(ql))
+      }
+      return items
     } catch (err) {
       // fallback to scan with filters
       const filters = []
@@ -102,7 +111,15 @@ async function listResources(owner, tag) {
     params.ExpressionAttributeValues = { ':t': tag }
   }
   const res = await ddb.send(new ScanCommand(params))
-  return res.Items || []
+  let items = res.Items || []
+  if (ql) {
+    // when searching without owner, only return public items
+    items = items.filter((it) => {
+      if (!owner && !it.public) return false
+      try { return JSON.stringify(it).toLowerCase().includes(ql) } catch (e) { return false }
+    })
+  }
+  return items
 }
 
 async function updateResource(id, patch = {}) {
@@ -126,12 +143,14 @@ async function updateResource(id, patch = {}) {
   }
 
   await ddb.send(new PutCommand(params))
+  try { await es.indexResource(updated) } catch (e) {}
   return updated
 }
 
 async function deleteResource(id) {
   const params = { TableName: TABLE, Key: { id } }
   await ddb.send(new DeleteCommand(params))
+  try { await es.deleteResource(id) } catch (e) {}
   return true
 }
 

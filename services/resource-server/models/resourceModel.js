@@ -65,19 +65,34 @@ function getResource(id) {
   return store.get(id) || null
 }
 
-function listResources(owner, tag) {
+function listResources(owner, tag, q) {
   let results = Array.from(store.values())
   if (owner !== undefined && owner !== null) results = results.filter((r) => r.owner === owner)
   if (tag !== undefined && tag !== null) {
     const t = String(tag).toLowerCase()
     results = results.filter((r) => {
-      // check scalar `tag` or any entry in `tags` array (case-insensitive)
       if (r.tag && String(r.tag).toLowerCase() === t) return true
       if (Array.isArray(r.tags)) {
         return r.tags.some(x => String(x).toLowerCase() === t)
       }
       return false
     })
+  }
+  if (q !== undefined && q !== null) {
+    const ql = String(q).toLowerCase().trim()
+    if (ql.length > 0) {
+      // If owner is not provided, searches only public resources
+      results = results.filter((r) => {
+        if (!owner) {
+          if (!r.public) return false
+        }
+        try {
+          return JSON.stringify(r).toLowerCase().includes(ql)
+        } catch (e) {
+          return false
+        }
+      })
+    }
   }
   return results
 }
