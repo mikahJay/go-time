@@ -20,7 +20,14 @@ export class ResourcesStack extends cdk.Stack {
     table.addGlobalSecondaryIndex({
       indexName: 'OwnerIndex',
       partitionKey: { name: 'owner', type: dynamodb.AttributeType.STRING },
-      // Add a sort key `tag` so queries can efficiently filter by owner + tag.
+      projectionType: dynamodb.ProjectionType.ALL,
+    })
+
+    // Create a new GSI for owner+tag queries. We must use a different index name
+    // because existing GSIs cannot be altered to add a sort key without recreating.
+    table.addGlobalSecondaryIndex({
+      indexName: 'OwnerTagIndex',
+      partitionKey: { name: 'owner', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'tag', type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     })

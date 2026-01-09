@@ -60,14 +60,16 @@ async function listResources(owner, tag) {
   if (owner !== undefined && owner !== null) {
     // If OwnerIndex exists, prefer Query for efficiency. Support optional tag as sort-key.
     try {
+      // Prefer a dedicated owner+tag index when tag is provided.
+      const useOwnerTagIndex = (tag !== undefined && tag !== null)
       const qparams = {
         TableName: TABLE,
-        IndexName: 'OwnerIndex',
+        IndexName: useOwnerTagIndex ? 'OwnerTagIndex' : 'OwnerIndex',
         KeyConditionExpression: '#owner = :o',
         ExpressionAttributeNames: { '#owner': 'owner' },
         ExpressionAttributeValues: { ':o': owner }
       }
-      if (tag !== undefined && tag !== null) {
+      if (useOwnerTagIndex) {
         qparams.KeyConditionExpression = '#owner = :o AND #tag = :t'
         qparams.ExpressionAttributeNames['#tag'] = 'tag'
         qparams.ExpressionAttributeValues[':t'] = tag
