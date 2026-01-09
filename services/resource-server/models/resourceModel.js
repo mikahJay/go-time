@@ -40,7 +40,7 @@ function nowIso() {
   return new Date().toISOString()
 }
 
-function createResource({ name, type = 'generic', quantity = 1, description = null, metadata = {}, owner = null, tags = [] } = {}) {
+function createResource({ name, type = 'generic', quantity = 1, description = null, metadata = {}, owner = null, tags = [], public: isPublic = false } = {}) {
   const id = genId()
   const resource = {
     id,
@@ -53,6 +53,7 @@ function createResource({ name, type = 'generic', quantity = 1, description = nu
     tag: Array.isArray(tags) && tags.length > 0 ? String(tags[0]) : null,
     metadata: metadata || {},
     owner: owner || null,
+    public: typeof isPublic === 'boolean' ? isPublic : false,
     createdAt: nowIso(),
     updatedAt: nowIso(),
   }
@@ -92,6 +93,7 @@ function updateResource(id, patch = {}) {
   if (patch.tags !== undefined) updated.tags = Array.isArray(patch.tags) ? patch.tags.slice(0, 10) : []
   // maintain `tag` scalar for indexing (first tag or null)
   if (patch.tags !== undefined) updated.tag = Array.isArray(patch.tags) && patch.tags.length > 0 ? String(patch.tags[0]) : null
+  if (patch.public !== undefined) updated.public = typeof patch.public === 'boolean' ? patch.public : Boolean(patch.public)
   if (patch.metadata !== undefined) updated.metadata = patch.metadata
   if (patch.owner !== undefined) updated.owner = patch.owner
   updated.updatedAt = nowIso()

@@ -26,6 +26,9 @@ async function create(req, res) {
       return res.status(400).json({ error: 'invalid_tags' })
     }
   }
+  if (payload.public !== undefined && typeof payload.public !== 'boolean') {
+    return res.status(400).json({ error: 'invalid_public' })
+  }
   try {
     const created = await store.createResource(payload)
     res.status(201).json(created)
@@ -45,6 +48,9 @@ async function update(req, res) {
     if (!Array.isArray(patch.tags) || patch.tags.some(t => typeof t !== 'string' || !t.trim() || t.length > 32)) {
       return res.status(400).json({ error: 'invalid_tags' })
     }
+  }
+  if (patch.public !== undefined && typeof patch.public !== 'boolean') {
+    return res.status(400).json({ error: 'invalid_public' })
   }
   const updated = await store.updateResource(id, patch)
   if (!updated) return res.status(404).json({ error: 'not_found' })

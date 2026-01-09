@@ -26,6 +26,7 @@ async function createResource(payload = {}) {
     tag: Array.isArray(payload.tags) && payload.tags.length > 0 ? String(payload.tags[0]) : (payload.tag || null),
     metadata: payload.metadata || {},
     owner: payload.owner || null,
+    public: (typeof payload.public === 'boolean') ? payload.public : false,
     createdAt: payload.createdAt || nowIso(),
     updatedAt: nowIso(),
   })
@@ -116,6 +117,7 @@ async function updateResource(id, patch = {}) {
   if (patch.description !== undefined) updated.description = patch.description
   if (patch.tags !== undefined) updated.tags = Array.isArray(patch.tags) ? patch.tags : []
   if (patch.tags !== undefined) updated.tag = Array.isArray(patch.tags) && patch.tags.length > 0 ? String(patch.tags[0]) : (patch.tag || null)
+  if (patch.public !== undefined) updated.public = typeof patch.public === 'boolean' ? patch.public : Boolean(patch.public)
   updated.updatedAt = nowIso()
 
   const params = {
