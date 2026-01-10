@@ -1,4 +1,3 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/aws-iac.ts",
-  "context": {}
+  "app": "npx ts-node bin/aws-iac.ts"
 }

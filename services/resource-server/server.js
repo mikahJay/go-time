@@ -14,8 +14,13 @@ app.use('/resources', resourceRoutes)
 const PORT = process.env.PORT || 4000
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Resource server listening on ${PORT}`)
+  const server = app.listen(PORT, () => {
+    const addr = server.address()
+    if (addr) {
+      console.log(`Resource server listening on ${addr.address}:${addr.port} (family=${addr.family})`)
+    } else {
+      console.log(`Resource server listening on ${PORT}`)
+    }
   })
 }
 

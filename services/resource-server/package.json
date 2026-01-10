@@ -12,7 +12,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "@aws-sdk/client-dynamodb": "^3.380.0",
-    "@aws-sdk/lib-dynamodb": "^3.380.0"
+    "@aws-sdk/lib-dynamodb": "^3.380.0",
+    "pg": "^8.11.0"
   },
   "devDependencies": {
     "vitest": "^1.0.0",

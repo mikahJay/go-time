@@ -7,6 +7,8 @@ const storeType = (process.env.RESOURCE_STORE || 'memory').toLowerCase()
 let store
 if (storeType === 'dynamo' || storeType === 'dynamodb') {
   store = require('./dynamoStore')
+} else if (storeType === 'postgres' || storeType === 'postgresql') {
+  store = require('./postgresStore')
 } else {
   store = require('./inMemoryStore')
 }
