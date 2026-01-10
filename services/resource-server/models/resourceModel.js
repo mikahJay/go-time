@@ -40,7 +40,7 @@ function nowIso() {
   return new Date().toISOString()
 }
 
-function createResource({ name, type = 'generic', quantity = 1, description = null, metadata = {}, owner = null } = {}) {
+function createResource({ name, type = 'generic', quantity = 1, description = null, metadata = {}, owner = null, tags = [], public: isPublic = false } = {}) {
   const id = genId()
   const resource = {
     id,
@@ -48,8 +48,12 @@ function createResource({ name, type = 'generic', quantity = 1, description = nu
     type,
     quantity: Number(quantity) || 0,
     description: description || null,
+    // tags: optional array of short tag strings; `tag` is a single primary tag used for indexing
+    tags: Array.isArray(tags) ? tags.slice(0, 10) : [],
+    tag: Array.isArray(tags) && tags.length > 0 ? String(tags[0]) : null,
     metadata: metadata || {},
     owner: owner || null,
+    public: typeof isPublic === 'boolean' ? isPublic : false,
     createdAt: nowIso(),
     updatedAt: nowIso(),
   }
@@ -61,10 +65,36 @@ function getResource(id) {
   return store.get(id) || null
 }
 
-function listResources(owner) {
-  const all = Array.from(store.values())
-  if (owner === undefined || owner === null) return all
-  return all.filter((r) => r.owner === owner)
+function listResources(owner, tag, q) {
+  let results = Array.from(store.values())
+  if (owner !== undefined && owner !== null) results = results.filter((r) => r.owner === owner)
+  if (tag !== undefined && tag !== null) {
+    const t = String(tag).toLowerCase()
+    results = results.filter((r) => {
+      if (r.tag && String(r.tag).toLowerCase() === t) return true
+      if (Array.isArray(r.tags)) {
+        return r.tags.some(x => String(x).toLowerCase() === t)
+      }
+      return false
+    })
+  }
+  if (q !== undefined && q !== null) {
+    const ql = String(q).toLowerCase().trim()
+    if (ql.length > 0) {
+      // If owner is not provided, searches only public resources
+      results = results.filter((r) => {
+        if (!owner) {
+          if (!r.public) return false
+        }
+        try {
+          return JSON.stringify(r).toLowerCase().includes(ql)
+        } catch (e) {
+          return false
+        }
+      })
+    }
+  }
+  return results
 }
 
 function updateResource(id, patch = {}) {
@@ -75,6 +105,10 @@ function updateResource(id, patch = {}) {
   if (patch.type !== undefined) updated.type = patch.type
   if (patch.quantity !== undefined) updated.quantity = Number(patch.quantity)
   if (patch.description !== undefined) updated.description = patch.description
+  if (patch.tags !== undefined) updated.tags = Array.isArray(patch.tags) ? patch.tags.slice(0, 10) : []
+  // maintain `tag` scalar for indexing (first tag or null)
+  if (patch.tags !== undefined) updated.tag = Array.isArray(patch.tags) && patch.tags.length > 0 ? String(patch.tags[0]) : null
+  if (patch.public !== undefined) updated.public = typeof patch.public === 'boolean' ? patch.public : Boolean(patch.public)
   if (patch.metadata !== undefined) updated.metadata = patch.metadata
   if (patch.owner !== undefined) updated.owner = patch.owner
   updated.updatedAt = nowIso()

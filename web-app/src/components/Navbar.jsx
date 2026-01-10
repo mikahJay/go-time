@@ -63,6 +63,11 @@ export default function Navbar({ user, onSignOut, activeTab, onNavigate }) {
             className={`nav-link ${activeTab === 'about' ? 'active' : ''}`}
             onClick={(e) => { e.preventDefault(); onNavigate && onNavigate('about') }}
           >About</a>
+          <a
+            href="#"
+            className={`nav-link ${activeTab === 'find' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); onNavigate && onNavigate('find') }}
+          >Find Resource</a>
           {user && (
             <a
               href="#"

@@ -23,6 +23,15 @@ export class ResourcesStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     })
 
+    // Create a new GSI for owner+tag queries. We must use a different index name
+    // because existing GSIs cannot be altered to add a sort key without recreating.
+    table.addGlobalSecondaryIndex({
+      indexName: 'OwnerTagIndex',
+      partitionKey: { name: 'owner', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'tag', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    })
+
     // Create a dedicated IAM role for DynamoDB access. This role is assumed
     // by Lambda by default; change the service principal as needed.
     const dynamoRole = new iam.Role(this, 'ResourcesDynamoRole', {

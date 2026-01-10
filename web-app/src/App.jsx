@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from './components/Navbar'
 import MyResources from './components/MyResources'
+import FindResources from './components/FindResources'
 
 function safeAtob(str) {
   if (typeof atob === 'function') return atob(str)
@@ -121,6 +122,8 @@ export default function App() {
       <main className="app-content">
         {activeTab === 'resources' ? (
           <MyResources user={user} />
+        ) : activeTab === 'find' ? (
+          <FindResources user={user} />
         ) : activeTab === 'about' ? (
           <>
             <h1>About GoTime</h1>

@@ -9,6 +9,8 @@ export default function MyResources({ user }) {
   const [newName, setNewName] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newQty, setNewQty] = useState(1)
+  const [newTagsInput, setNewTagsInput] = useState('')
+  const [newPublic, setNewPublic] = useState(false)
   const [addingErr, setAddingErr] = useState(null)
   const [search, setSearch] = useState('')
 
@@ -75,6 +77,10 @@ export default function MyResources({ user }) {
               const base = import.meta.env.VITE_RESOURCE_SERVER_BASE || ''
               const url = base ? `${base.replace(/\/$/, '')}/resources` : `/api/resources`
               const payload = { name: newName, description: newDesc, quantity: Number(newQty), owner: user.email || user.name }
+              if (newTagsInput && newTagsInput.trim()) {
+                payload.tags = newTagsInput.split(',').map((t) => t.trim()).filter(Boolean)
+              }
+              if (typeof newPublic === 'boolean') payload.public = newPublic
               const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
               if (!resp.ok) {
                 const body = await resp.text()
@@ -86,6 +92,8 @@ export default function MyResources({ user }) {
               setNewName('')
               setNewDesc('')
               setNewQty(1)
+              setNewTagsInput('')
+              setNewPublic(false)
             } catch (err) {
               setAddingErr(err.message || String(err))
             }
@@ -98,6 +106,15 @@ export default function MyResources({ user }) {
             </div>
             <div>
               <input type="number" placeholder="Quantity (default 1)" value={newQty} onChange={(e) => setNewQty(e.target.value)} min="1" />
+            </div>
+            <div>
+              <input placeholder="Tags (comma-separated)" value={newTagsInput} onChange={(e) => setNewTagsInput(e.target.value)} />
+            </div>
+            <div>
+              <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input type="checkbox" checked={newPublic} onChange={(e) => setNewPublic(e.target.checked)} />
+                <span>Make public</span>
+              </label>
             </div>
             <div>
               <button type="submit">Create</button>
@@ -113,8 +130,26 @@ export default function MyResources({ user }) {
             <ul>
               {displayedResources.map((r) => (
                 <li key={r.id}>
-                  <div><strong>{r.name || r.id}</strong> — {r.quantity ?? 0}</div>
+                  <div><strong style={{ color: r.public ? 'green' : undefined }}>{r.name || r.id}</strong> — {r.quantity ?? 0}</div>
                   <div>{r.description || <em>No description</em>}</div>
+                  {r.tags && r.tags.length > 0 && (
+                    <div>Tags: {r.tags.join(', ')}</div>
+                  )}
+                  <div>
+                    <a href="#" onClick={async (e) => {
+                      e.preventDefault()
+                      try {
+                        const base = import.meta.env.VITE_RESOURCE_SERVER_BASE || ''
+                        const url = base ? `${base.replace(/\/$/, '')}/resources/${r.id}` : `/api/resources/${r.id}`
+                        const resp = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ public: !r.public }) })
+                        if (!resp.ok) throw new Error(`status:${resp.status}`)
+                        const updated = await resp.json()
+                        setResources((prev) => prev.map((it) => it.id === updated.id ? updated : it))
+                      } catch (err) {
+                        setResourcesErr(err.message || String(err))
+                      }
+                    }}>{r.public ? 'Make private' : 'Make public'}</a>
+                  </div>
                   {editingId === r.id ? (
                     <div>
                       <textarea value={editingDesc} onChange={(e) => setEditingDesc(e.target.value)} rows={3} cols={40} />

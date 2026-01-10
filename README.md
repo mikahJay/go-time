@@ -6,7 +6,7 @@ A platform for allocating unused resources to worthy causes.
 
 There will be three interfaces:
 
-1. A React web application in `app`.
+1. A React web application in `web-app`.
 
 2. An iOS mobile application in `iOS`.
 
@@ -38,7 +38,7 @@ npm install
 # default port 4000 (override with $env:PORT = '4000')
 $env:PORT = '4000'; npm start &
 
-cd ..\..\app
+cd ..\..\web-app
 npm install
 # Vite dev server (default 5173). To change the port, set --port or VITE_DEV_PORT.
 npm run dev -- --port 5173
@@ -58,7 +58,7 @@ npm install
 # default port 4000
 PORT=4000 npm start &
 
-cd ../../app
+cd ../../web-app
 npm install
 # Vite dev server (default 5173). To change the port pass --port.
 npm run dev -- --port 5173
@@ -68,4 +68,15 @@ Notes
 - `auth-server` defaults to port 3000.
 - `resource-server` defaults to port 4000.
 - The React app uses Vite and serves on 5173 by default; you can set a different port using the `--port` flag when running `npm run dev`.
-- To point the front-end at a running `resource-server`, set `VITE_RESOURCE_SERVER_BASE` in `app/.env` or in your shell: `export VITE_RESOURCE_SERVER_BASE=http://localhost:4000` (or PowerShell equivalent).
+- To point the front-end at a running `resource-server`, set `VITE_RESOURCE_SERVER_BASE` in `web-app/.env` or in your shell: `export VITE_RESOURCE_SERVER_BASE=http://localhost:4000` (or PowerShell equivalent).
+
+## AWS profile guidance
+
+When deploying the CDK stacks you may want to use a specific AWS profile. Configure your credentials via `~/.aws/credentials` and `~/.aws/config`, then set the profile and enable loading the config in PowerShell:
+
+```powershell
+$env:AWS_PROFILE = 'dev'
+$env:AWS_SDK_LOAD_CONFIG = '1'
+```
+
+After that run `npx cdk deploy ResourcesStack` (you may need to run `npx cdk bootstrap` once).
