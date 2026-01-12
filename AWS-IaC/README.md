@@ -19,3 +19,19 @@ cdk deploy --profile dev --context devIpCidr=1.2.3.4/32
 ```
 
 3. Use SSM port forwarding to the bastion and test locally (see project docs in repo).
+
+**Starting SSM for Database Connection**
+
+When the stack is deployed you can start an SSM port-forwarding session from your workstation to the bastion so your local machine can reach the private RDS endpoint on localhost:5432.
+
+Example (PowerShell) — replace the placeholders with your values from the CloudFormation stack outputs and Secrets Manager:
+
+```powershell
+$body='{"host":["<DB_ENDPOINT>"],"portNumber":["5432"],"localPortNumber":["5432"]}'
+[System.IO.File]::WriteAllText("params-remote.json",$body,(New-Object System.Text.UTF8Encoding $false))
+aws ssm start-session --target <BASTION_INSTANCE_ID> \
+	--document-name AWS-StartPortForwardingSessionToRemoteHost \
+	--parameters file://params-remote.json --region <AWS_REGION> --profile <AWS_PROFILE>
+```
+
+Leave that terminal open while you run your application locally pointed at `127.0.0.1:5432`.

@@ -1,6 +1,6 @@
 # Resource Server
 
-Scaffold for a simple Resource microservice.
+Scaffold for a simple Resource microservice. Uses a PostgresDB RDS instance in AWS.
 
 ## Endpoints
 
@@ -38,16 +38,6 @@ npm install
 npm test
 ```
 
-## Using DynamoDB
-
-Set `RESOURCE_STORE=dynamo` and configure `AWS_REGION` and `DYNAMO_TABLE` (see `.env.example`). The server will use DynamoDB as the backing store and expose the same `/resources` API.
-
-Note: the DynamoDB adapter uses `Scan` for list operations (suitable for small datasets / dev). For production usage, add proper indexes and queries.
-
-Fields
-
-- `description` (optional string): free-text description for the resource. It's optional and may be included on create or update. The server validates that `description` is a string when present.
-
 ### AWS profile & config (recommended)
 
 The AWS SDK resolves credentials and region using the standard provider chain, so for local development it's recommended to configure your profile in `~/.aws/credentials` and `~/.aws/config` rather than committing secrets.
@@ -73,22 +63,7 @@ export AWS_PROFILE=dev
 export AWS_SDK_LOAD_CONFIG=1
 ```
 
-You can still set `AWS_REGION` and `DYNAMO_TABLE` in `services/resource-server/.env` for convenience.
-
-### Local development with LocalStack
-
-To run against LocalStack (DynamoDB emulation) set the `RESOURCE_STORE` to `dynamo` and point the client at the LocalStack endpoint. Example environment settings:
-
-```powershell
-setx RESOURCE_STORE dynamo
-setx AWS_REGION us-east-1
-setx DYNAMO_TABLE Resources
-setx DYNAMO_ENDPOINT http://localhost:4566
-```
-
-The DynamoDB adapter now supports `DYNAMO_ENDPOINT`, so the client will point at LocalStack when that variable is set.
-
-## Networking Workarounds
+## Connect resource-server to Postgres RDS Instance
 
 If your local network cannot reach the RDS instance (ETIMEDOUT), use AWS Systems Manager (SSM) port forwarding to tunnel the Postgres port through an EC2 instance in the same VPC. This avoids opening the DB to the public internet.
 
@@ -96,13 +71,13 @@ If your local network cannot reach the RDS instance (ETIMEDOUT), use AWS Systems
 - Attach an IAM role with the `AmazonSSMManagedInstanceCore` policy to the instance.
 - Ensure the EC2 instance's security group allows outbound TCP to port `5432`, and ensure the DB security group allows inbound TCP `5432` from the EC2 instance security group.
 
-Once you have an instance (`i-0123456789abcdef0`) you can start a local port-forwarding session (this example forwards local port 5432 to the DB):
+Once you have an instance (`i-07f3fc0cd01b8a1a2`) you can start a local port-forwarding session (this example forwards local port 5432 to the DB):
 
 PowerShell (requires AWS CLI v2 and `AWS_PROFILE` configured):
 
 ```powershell
 $env:AWS_PROFILE='dev'
-aws ssm start-session --target i-0123456789abcdef0 \
+aws ssm start-session --target i-07f3fc0cd01b8a1a2 \
 	--document-name AWS-StartPortForwardingSession \
 	--parameters '{"portNumber":["5432"],"localPortNumber":["5432"]}'
 ```
