@@ -431,8 +431,8 @@
     ],
     "SecurityGroupIngress": [
      {
-      "CidrIp": "98.240.224.250/32",
-      "Description": "Allow Postgres from developer IPv4",
+      "CidrIpv6": "2601:447:d180:5e80:1856:94da:9009:5b4c/32",
+      "Description": "Allow Postgres from developer IPv6",
       "FromPort": 5432,
       "IpProtocol": "tcp",
       "ToPort": 5432

@@ -32,6 +32,19 @@ export class ResourcesStack extends cdk.Stack {
       new cdk.CfnOutput(this, 'DevIpHint', { value: 'Set DEV_IP_CIDR env var or cdk context devIpCidr to restrict DB access' })
     }
 
+    // Optionally allow a second developer machine to access Postgres
+    // Configure via env `DEV2_IP_CIDR` or CDK context `dev2IpCidr` (preferred)
+    const dev2IpCidr = process.env.DEV2_IP_CIDR || this.node.tryGetContext('dev2IpCidr')
+    if (dev2IpCidr) {
+      const isIpv6Dev2 = dev2IpCidr.includes(':')
+      const cidr = dev2IpCidr.includes('/') ? dev2IpCidr : `${dev2IpCidr}${isIpv6Dev2 ? '/128' : '/32'}`
+      if (isIpv6Dev2) {
+        dbSecurityGroup.addIngressRule(ec2.Peer.ipv6(cidr), ec2.Port.tcp(5432), 'Allow Postgres from developer (dev2) IPv6')
+      } else {
+        dbSecurityGroup.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.tcp(5432), 'Allow Postgres from developer (dev2) IPv4')
+      }
+    }
+
     const dbCredentials = rds.Credentials.fromGeneratedSecret('postgres')
 
     const db = new rds.DatabaseInstance(this, 'ResourcesPostgres', {
