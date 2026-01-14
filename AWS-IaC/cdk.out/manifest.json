@@ -78,7 +78,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/2c40343667cb7f6f93cc12b04b4bd25a7411893d2fb3b296d63fefe37be4f673.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/aba1a1cd78cca23e34486136667f86dcf239b77a369960d64f0b385dec9155f0.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -226,6 +226,12 @@
             "data": "ResourcesDbSg1E47B9B4"
           }
         ],
+        "/ResourcesStack/DevIpHint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DevIpHint"
+          }
+        ],
         "/ResourcesStack/ResourcesPostgres/SubnetGroup/Default": [
           {
             "type": "aws:cdk:logicalId",
@@ -308,6 +314,54 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "ResourcesDbSecretArn"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesDbSg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PublicResourcesDbSg1D69F40A"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesPostgres/SubnetGroup/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PublicResourcesPostgresSubnetGroup79421644"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesPostgres/Secret/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ResourcesStackPublicResourcesPostgresSecretB21F541E3fdaad7efa858a3daf9490cf0a702aeb"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesPostgres/Secret/Attachment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PublicResourcesPostgresSecretAttachment31E2A768"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesPostgres/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PublicResourcesPostgres6B01A59D"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesDbEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PublicResourcesDbEndpoint"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesDbPort": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PublicResourcesDbPort"
+          }
+        ],
+        "/ResourcesStack/PublicResourcesDbSecretArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "PublicResourcesDbSecretArn"
           }
         ],
         "/ResourcesStack/CDKMetadata/Default": [

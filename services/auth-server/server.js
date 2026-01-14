@@ -65,12 +65,32 @@ app.get('/auth/:provider/callback', async (req, res) => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString()
       })
-      const data = await resp.json()
-      // Redirect back to client app with id_token (if present) or access_token as a query param
-      const token = data.id_token || data.access_token || ''
+      const text = await resp.text()
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (e) {
+        try {
+          const parsed = new URLSearchParams(text)
+          data = {}
+          for (const [k, v] of parsed) data[k] = v
+        } catch (e2) {
+          data = { raw: text }
+        }
+      }
+      // Determine token from possible shapes (JSON or form-encoded)
+      const token = (data && (data.id_token || data.access_token || data.access_token)) || ''
+      console.log('[/auth/google/callback] token exchange status:', resp.status)
+      console.log('[/auth/google/callback] token exchange response body:', text)
+      console.log('[/auth/google/callback] token exchange result:', {
+        id_token: !!(data && data.id_token),
+        access_token: !!(data && data.access_token),
+        token_length: token ? token.length : 0
+      })
       const redirectUrl = new URL(CLIENT_REDIRECT)
       redirectUrl.searchParams.set('provider', 'google')
       redirectUrl.searchParams.set('token', token)
+      console.log('[/auth/google/callback] redirecting to client:', redirectUrl.toString())
       return res.redirect(redirectUrl.toString())
     }
 

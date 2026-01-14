@@ -1,18 +1,39 @@
 ﻿const { Pool } = require('pg')
 const crypto = require('crypto')
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager')
 
-// Connection: prefer DATABASE_URL, otherwise use individual PG_* vars.
-const connectionString = process.env.DATABASE_URL
-  || (process.env.PGHOST ? `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'postgres'}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE || 'postgres'}` : null)
+let pool
 
-// Configure pool. For dev against RDS, enable SSL but allow self-signed certs
-const poolConfig = connectionString ? { connectionString } : {}
-// If connecting to a remote DB (via connectionString or PGHOST), enable SSL for Postgres
-if (connectionString || process.env.PGHOST) {
-  poolConfig.ssl = { rejectUnauthorized: false }
-}
+// Initialize pool asynchronously. If `DATABASE_SECRET_ARN` is provided, fetch
+// credentials from Secrets Manager and construct the connection string.
+const poolReady = (async () => {
+  try {
+    let connectionString = process.env.DATABASE_URL
+      || (process.env.PGHOST ? `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || 'postgres'}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE || 'postgres'}` : null)
 
-const pool = new Pool(poolConfig)
+    if (process.env.DATABASE_SECRET_ARN) {
+      const client = new SecretsManagerClient({ region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION })
+      const cmd = new GetSecretValueCommand({ SecretId: process.env.DATABASE_SECRET_ARN })
+      const resp = await client.send(cmd)
+      const secret = JSON.parse(resp.SecretString)
+      const user = secret.username || secret.user || 'postgres'
+      const pass = secret.password || secret.pass || ''
+      const host = secret.host || secret.hostname || secret.HOST || process.env.PGHOST
+      const port = secret.port || secret.PORT || 5432
+      const db = secret.dbname || secret.database || secret.DBNAME || 'postgres'
+      connectionString = `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${db}`
+    }
+
+    const poolConfig = connectionString ? { connectionString } : {}
+    if (connectionString || process.env.PGHOST) poolConfig.ssl = { rejectUnauthorized: false }
+    pool = new Pool(poolConfig)
+  } catch (err) {
+    console.error('Failed to initialize Postgres pool', err)
+    throw err
+  }
+})()
+
+function ensurePool() { return poolReady }
 
 // SQL notes (run once to create table):
 /*
@@ -33,6 +54,7 @@ CREATE INDEX idx_resources_data_gin ON resources USING gin (data);
 function nowIso() { return new Date().toISOString() }
 
 async function createResource(payload = {}) {
+  await ensurePool()
   const id = payload.id || `res_${crypto.randomUUID()}`
   const resource = Object.assign({}, payload, {
     id,
@@ -61,12 +83,14 @@ async function createResource(payload = {}) {
 }
 
 async function getResource(id) {
+  await ensurePool()
   const res = await pool.query('SELECT data FROM resources WHERE id = $1', [id])
   if (!res.rowCount) return null
   return res.rows[0].data
 }
 
 async function listResources(owner, tag, q) {
+  await ensurePool()
   const ql = q !== undefined && q !== null ? String(q).toLowerCase().trim() : null
   const params = []
   let where = []
@@ -106,6 +130,7 @@ async function listResources(owner, tag, q) {
 }
 
 async function updateResource(id, patch = {}) {
+  await ensurePool()
   const existing = await getResource(id)
   if (!existing) return null
   const updated = Object.assign({}, existing)
@@ -127,11 +152,13 @@ async function updateResource(id, patch = {}) {
 }
 
 async function deleteResource(id) {
+  await ensurePool()
   await pool.query('DELETE FROM resources WHERE id = $1', [id])
   return true
 }
 
 async function clearStore() {
+  await ensurePool()
   await pool.query('TRUNCATE TABLE resources RESTART IDENTITY CASCADE')
   return true
 }
