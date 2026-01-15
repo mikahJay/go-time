@@ -1,5 +1,8 @@
+import os
+import asyncio
 from fastapi import FastAPI, HTTPException
-from db import database
+from db import database, get_sync_connection
+from matcher import ResourceMatcher
 
 app = FastAPI(title="resource-matcher")
 
@@ -28,3 +31,30 @@ async def health():
         raise Exception("unexpected response")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@app.post("/match/{need_id}")
+async def match_need(need_id: int):
+    """Run the synchronous matcher.match in a threadpool and return wrapped JSON."""
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+
+    # create a short-lived sync DB connection for the matcher
+    try:
+        conn = get_sync_connection()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"failed to get db connection: {e}")
+
+    matcher = ResourceMatcher(conn, anthropic_key)
+
+    try:
+        # run blocking match in threadpool
+        matches = await asyncio.to_thread(matcher.match, need_id)
+        return {"matches": matches}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass

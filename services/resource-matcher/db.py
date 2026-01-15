@@ -60,3 +60,15 @@ if not DATABASE_URL:
     DATABASE_URL = _build_from_secret_or_env()
 
 database = Database(DATABASE_URL)
+
+
+def get_sync_connection():
+    """Return a synchronous psycopg2 connection using the resolved DATABASE_URL."""
+    import psycopg2
+
+    dsn = DATABASE_URL
+    # strip surrounding quotes if present
+    if isinstance(dsn, str) and ((dsn.startswith('"') and dsn.endswith('"')) or (dsn.startswith("'") and dsn.endswith("'"))):
+        dsn = dsn[1:-1]
+
+    return psycopg2.connect(dsn)
