@@ -58,3 +58,18 @@ async def match_need(need_id: int):
             conn.close()
         except Exception:
             pass
+
+
+
+@app.post("/match-test/{need_id}")
+async def match_test(need_id: int):
+    """Test-only route that returns a canned match result without DB or LLM calls."""
+    sample = [
+        {
+            "id": "test-resource-1",
+            "feasibility": 85,
+            "explanation": "Placeholder match used for local testing",
+            "similarity": 0.92,
+        }
+    ]
+    return {"matches": sample, "need_id": need_id}

@@ -9,6 +9,10 @@ RESOURCE_PORT?=4000
 VITE_PORT?=5173
 
 .PHONY: install-all install-auth install-resource install-app start-all start-auth start-resource start-app
+VENV_DIR=services/resource-matcher/.venv
+MATCHER_DIR=services/resource-matcher
+
+.PHONY: venv-matcher run-matcher
 
 install-all: install-auth install-resource install-app
 
@@ -66,3 +70,17 @@ stop-all:
 up: install-all start-all
 
 # Note: This Makefile assumes a POSIX-like shell. On Windows use WSL, Git Bash, or run commands individually.
+
+# Create a python venv for resource-matcher and install requirements
+venv-matcher:
+	@echo "Creating venv for resource-matcher and installing requirements"
+	python -m venv $(VENV_DIR)
+	# Use the venv's python to install requirements (works on Unix; on Windows pip sits in Scripts)
+	$(VENV_DIR)/bin/python -m pip install --upgrade pip setuptools || $(VENV_DIR)/Scripts/python -m pip install --upgrade pip setuptools
+	$(VENV_DIR)/bin/python -m pip install -r $(MATCHER_DIR)/requirements.txt || $(VENV_DIR)/Scripts/python -m pip install -r $(MATCHER_DIR)/requirements.txt
+
+# Run the resource-matcher service (foreground)
+run-matcher: venv-matcher
+	@echo "Starting resource-matcher (uvicorn)"
+	(cd $(MATCHER_DIR) && $(VENV_DIR)/bin/python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000) \
+		|| (cd $(MATCHER_DIR) && $(VENV_DIR)/Scripts/python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000)
